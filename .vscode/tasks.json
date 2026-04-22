@@ -1,0 +1,23 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "C/C++: gcc.exe build entire project",
+            "command": "powershell",
+            "args": [
+                "-Command",
+                "$src = Join-Path $PWD \"src\"; $out = Join-Path $src \"main.exe\"; $files = Get-ChildItem -Path $src -Recurse -Filter *.c | Select-Object -ExpandProperty FullName; & \"C:\\MinGW\\bin\\gcc.exe\" -fdiagnostics-color=always -g $files -I $src -o $out"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": ["$gcc"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Recursively compiles all .c files under src/ into main.exe"
+        }
+    ]
+}

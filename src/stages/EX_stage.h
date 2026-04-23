@@ -3,22 +3,6 @@
 
 #include <stdint.h>
 #include "pipeline.h"
-typedef struct
-{
-    uint8_t dest_reg;
-
-    // R - Format
-    uint8_t op;
-    uint16_t SHAMT;
-    uint8_t reg_a;
-    uint8_t reg_b;
-
-    // I Format imm 18bits
-    int32_t immediate;
-
-    // J- Format
-    uint32_t address;
-} EX_Stage;
 typedef enum
 {
     // 0X00 is HEXADECIMAL
@@ -37,6 +21,6 @@ typedef enum
 
 } OpCode;
 
-void EX_execute(EX_Stage *self, EX_MEM_Register *out);
+void EX_execute(ID_EX_Register *self, EX_MEM_Register *out, MEM_WB_Register *wb);
 
 #endif // EXECUTE_TEMPLATE

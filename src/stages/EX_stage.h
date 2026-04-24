@@ -21,6 +21,6 @@ typedef enum
 
 } OpCode;
 
-void EX_execute(ID_EX_Register *self, EX_MEM_Register *out, MEM_WB_Register *wb);
+void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, MEM_WB_Buffer *wb);
 
 #endif // EXECUTE_TEMPLATE

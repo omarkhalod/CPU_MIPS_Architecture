@@ -14,59 +14,61 @@
 #include "EX_stage.h"
 #include <stdio.h>
 
-void EX_execute(ID_EX_Register *self, EX_MEM_Register *out, MEM_WB_Register *wb)
+void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, MEM_WB_Buffer *wb)
 {
     // clear any previous data from out
 
     //  check if any of the values for reg are not up to date
     if (self->regA_updated)
     {
-        self->regA_updated = wb->data;
+        self->regA_value = wb->data;
+        self->regA_updated = false;
     }
     else if (self->regB_updated)
     {
-        self->regB_updated = wb->data;
+        self->regB_value = wb->data;
+        self->regB_updated = false;
     }
-    // pass the des_reg thorugh
+    // pass the des_reg through
     out->dest_reg = self->dest_reg;
     uint32_t memAddress;
 
     switch (self->op)
     {
     case OP_ADD:
-        out->alu_result = self->regA + self->regB;
+        out->alu_result = self->regA_value + self->regB_value;
         break;
     case OP_SUB:
-        out->alu_result = self->regA - self->regB;
+        out->alu_result = self->regA_value - self->regB_value;
         break;
     case OP_MUL:
-        out->alu_result = self->regA * self->regB;
+        out->alu_result = self->regA_value * self->regB_value;
         break;
     case OP_MOVI:
         // TODO
         break;
     case OP_AND:
-        out->alu_result = self->regA & self->regB;
+        out->alu_result = self->regA_value & self->regB_value;
         break;
     case OP_ORI:
         // TODO
         break;
     case OP_LSL:
         // TODO
-        out->alu_result = self->regB << self->SHAMT;
+        out->alu_result = self->regB_value << self->SHAMT;
         break;
     case OP_LSR:
         // TODO
-        out->alu_result = self->regB >> self->SHAMT;
+        out->alu_result = self->regB_value >> self->SHAMT;
         break;
     case OP_MOVR:
         // TODO
-        memAddress = self->regB + self->immediate;
+        memAddress = self->regB_value + self->immediate;
         out->mem_read = memAddress;
         break;
     case OP_MOVM:
         // TODO
-        memAddress = self->regB + self->immediate;
+        memAddress = self->regB_value + self->immediate;
         out->mem_write = memAddress;
         break;
     default:
@@ -74,20 +76,21 @@ void EX_execute(ID_EX_Register *self, EX_MEM_Register *out, MEM_WB_Register *wb)
     }
 }
 
+#ifdef EX_STAGE_DEMO_MAIN
 int main(int argc, char const *argv[])
 {
-    ID_EX_Register execute;
+    ID_EX_Buffer execute;
     execute.address = 0x0;
     execute.dest_reg = 0x0;
     execute.immediate = 0x01;
     execute.op = (uint8_t)OP_ADD;
-    execute.regA = 0x5;
-    execute.regB = 0x3;
-    execute.regA_updated = false;
-    execute.regB_updated = false;
+    execute.regA_value = 0x5;
+    execute.regB_value = 0x3;
+    execute.regA_updated = false;   //I didn't update this
+    execute.regB_updated = false;   //I didn't update this
 
-    EX_MEM_Register output;
-    MEM_WB_Register s;
+    EX_MEM_Buffer output;
+    MEM_WB_Buffer s;
 
     EX_execute(&execute, &output, &s);
 
@@ -95,3 +98,4 @@ int main(int argc, char const *argv[])
 
     return 0;
 }
+#endif

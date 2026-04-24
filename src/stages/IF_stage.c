@@ -107,6 +107,7 @@ void load_program(int32_t *instructions, int count) {
 //  this with your full pipeline loop.
 // ─────────────────────────────────────────────
 
+#ifdef IF_STAGE_DEMO_MAIN
 int main() {
 
     // ── Initialise everything to 0 ─────────────
@@ -171,3 +172,4 @@ int main() {
 
     return 0;
 }
+#endif

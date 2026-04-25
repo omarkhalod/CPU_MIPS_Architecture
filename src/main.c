@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "pipeline.h"
 #include "registerFile.h"
+#include "memory.h"
 #include "stages/ID_stage.h"
 #include "stages/EX_stage.h"
 
@@ -19,29 +20,26 @@ int main(int argc, char const *argv[])
     EX_MEM_Buffer* ex_mem = malloc(sizeof(EX_MEM_Buffer));
     MEM_WB_Buffer* mem_wb = malloc(sizeof(MEM_WB_Buffer));
     
-    if_id->instruction = instruction;
+    memory* memory = createMemory();
     gpr* R = createRegisters();
-    R[2].data = 10;
-    R[3].data = 20;
-
-    id_ex->regA_updated = false;
-    id_ex->regB_updated = false;
-
-    ex_mem->alu_result = 0;
-
-    ID_stage_decode(if_id, id_ex, R);
     
-    EX_execute(id_ex, ex_mem, mem_wb);
-
-    printf("ALU result: %d \n", ex_mem->alu_result);
+    //Don't forget to pass memory/gpr to the stages that need them
     
-    // addProgramsToMemory();
-    // // memory ready
+    // if_id->instruction = instruction;
+    // R[2].data = 10;
+    // R[3].data = 20;
 
-    // //start executing:
-    // IF_stage(); //Fetched instruciton 
+    // id_ex->regA_updated = false;
+    // id_ex->regB_updated = false;
+
+    // ex_mem->alu_result = 0;
+
+    // ID_stage_decode(if_id, id_ex, R);
+    
+    // EX_execute(id_ex, ex_mem, mem_wb);
+
+    // printf("ALU result: %d \n", ex_mem->alu_result);
 
     return 0;
 
 }
-

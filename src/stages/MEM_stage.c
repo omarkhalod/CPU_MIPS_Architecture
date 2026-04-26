@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include "MEM_stage.h"
+#include "memory.h"
+
+void MEM_execute(EX_MEM_Buffer *in, MEM_WB_Buffer *out, memory *mem)
+{
+
+    out->dest_reg = in->dest_reg; // forward to WB to know which register to write back to
+
+    if (in->mem_read != -1)
+    {
+        // LOAD (MOVR): R1 = MEM[R2 + IMM]
+        int address = in->mem_read;
+
+        // Not sure if needed!
+        // if (address < 1024 || address >= 2048) {
+        //     printf("MEM ERROR: Invalid read address %d (data segment: 1024-2047)\n", address);
+        //     return;
+        // }
+
+        out->data = mem[address].data; // goes to MEM_WB_Buffer
+        printf("MEM: LOAD - Read value %d from address %d\n", out->data, address);  
+    }
+    else if (in->mem_write != -1)
+    {
+        // STORE (MOVM): MEM[R2 + IMM] = R1
+        int address = in->mem_write;
+
+        // Not sure if needed!
+        // if (address < 1024 || address >= 2048) {
+        //     printf("MEM ERROR: Invalid write address %d (data segment: 1024-2047)\n", address);
+        //     return;
+        // }
+
+        mem[address].data = in->alu_result;
+        out->data = in->alu_result;
+        printf("MEM: STORE - Wrote value %d to address %d\n", in->alu_result, address);
+    }
+    else
+    {
+        // Non-memory instruction: forward ALU result to WB
+        out->data = in->alu_result;
+        printf("MEM: No memory op - Forwarding ALU result %d\n", in->alu_result);
+    }
+}

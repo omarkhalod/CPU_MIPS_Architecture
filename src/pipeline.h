@@ -29,6 +29,8 @@ typedef struct
     // handeling data hazards
     bool regA_updated;
     bool regB_updated;
+
+    bool reg_write;
 } ID_EX_Buffer;
 
 typedef struct
@@ -36,12 +38,14 @@ typedef struct
     int alu_result;
     int dest_reg;
     int mem_read, mem_write;
+    bool reg_write;
 } EX_MEM_Buffer;
 
 typedef struct
 {
     int data;
     int dest_reg;
+    bool reg_write;
 } MEM_WB_Buffer;
 
 #endif

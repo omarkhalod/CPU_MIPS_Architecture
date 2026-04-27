@@ -31,6 +31,7 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, MEM_WB_Buffer *wb)
     }
     // pass the des_reg through
     out->dest_reg = self->dest_reg;
+    out->reg_write = self->reg_write;
     uint32_t memAddress;
 
     switch (self->op)
@@ -74,6 +75,7 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, MEM_WB_Buffer *wb)
     default:
         break;
     }
+
 }
 
 #ifdef EX_STAGE_DEMO_MAIN

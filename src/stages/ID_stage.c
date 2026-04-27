@@ -44,7 +44,11 @@ void ID_stage_decode(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
     uint16_t shamt = instruction & 0x1FFF;
     printf("shamt: %d \n", shamt);
 
-
+    if(opcode == 4 || opcode == 7 || opcode == 11){
+        out->reg_write = false;
+    }else{
+        out->reg_write = true;
+    }
     out->regB_value = R3Value;
     out->SHAMT = shamt;
 }

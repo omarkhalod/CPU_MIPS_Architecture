@@ -4,7 +4,30 @@
 #include "ID_stage.h"
 #include "registerFile.h"
 
+uint32_t inUseArray[] = {-1,-1}; 
+
+void dequeueInUse(){
+    inUseArray[0] = inUseArray[1];
+    inUseArray[1] = -1;
+}
+
+void enqueueInUse(uint32_t R){
+    if(inUseArray[0]==-1){
+        inUseArray[0] = R;
+    } else{
+        inUseArray[1] = R;
+    }
+}
+
+bool inUseContains(uint32_t R){
+    return inUseArray[0] == R || inUseArray[1] == R;
+}
+
 void ID_stage_decode(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
+    
+    out->regA_updated = false;
+    out->regB_updated = false;
+
     uint32_t instruction = in->instruction;
     
     uint8_t opcode = (instruction >> 28) & 0xF;
@@ -27,9 +50,15 @@ void ID_stage_decode(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
     
 
     out->dest_reg = R1;
-    out->regA_value = R2Value;
+    
+    enqueueInUse(R1); //we will dequeue after WB in pipeline /.,mnb/.,mnbvcxzasdfghjkl;poiuytrewq
 
+    out->regA_value = R2Value;
+    
     if(opcode == 3 || opcode == 4 || opcode == 6 || opcode == 10 || opcode ==11){
+        if(opcode == 4){
+            out->dest_reg = R[R1].data;
+        }
         uint32_t imm = instruction & 0x0003FFFF; 
         out->immediate = imm;
         return;
@@ -40,6 +69,18 @@ void ID_stage_decode(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
 
     int R3Value = R[R3].data;
     printf("operand 2 regiseter value: %d \n", R3Value);
+
+
+    if(inUseContains(R2)){
+        out->regA_updated = true;
+    }
+
+    if(inUseContains(R3)){
+        out->regB_updated = true;
+    }
+
+    printf("[%d, %d]", inUseArray[0], inUseArray[1]);
+
 
     uint16_t shamt = instruction & 0x1FFF;
     printf("shamt: %d \n", shamt);

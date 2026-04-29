@@ -1,33 +1,40 @@
 //! 1
-// TODO:EX should take 2 cyclyes and
-
-//! 2
 // TODO: If there is a branch instruction (JMP, JEQ), instructions skipped that are already in the pipeline should
 // TODO: be removed from the pipeline(Flush IF and ID) and update the PC in the second cycle
 
-//! 3
+//! 2
 // TODO: Have to handle overflow for signed numbers
 
-//! 4
+//! 3
 // TODO: and ofc do all the normal execution for the instructions
 
 #include "EX_stage.h"
+#include "registerFile.h"
 #include <stdio.h>
+int prevAluResult;
 
-void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, MEM_WB_Buffer *wb)
+void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var_inbtw_mres, gpr* pc)
 {
     // clear any previous data from out
 
     //  check if any of the values for reg are not up to date
     if (self->regA_updated)
     {
-        self->regA_value = wb->data;
-        self->regA_updated = false;
+        if(prevAluResult == -1){
+            self->regA_updated = omar_yahia_var_inbtw_mres;
+        } else{
+            self->regA_value = prevAluResult;
+            self->regA_updated = false;
+        }
     }
     else if (self->regB_updated)
     {
-        self->regB_value = wb->data;
-        self->regB_updated = false;
+        if(prevAluResult == -1){
+            self->regB_updated = omar_yahia_var_inbtw_mres;
+        } else{
+            self->regB_value = prevAluResult;
+            self->regB_updated = false;
+        }        
     }
     // pass the des_reg through
     out->dest_reg = self->dest_reg;
@@ -37,40 +44,51 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, MEM_WB_Buffer *wb)
     switch (self->op)
     {
     case OP_ADD:
-        out->alu_result = self->regA_value + self->regB_value;
+        prevAluResult = out->alu_result = self->regA_value + self->regB_value;
         break;
     case OP_SUB:
-        out->alu_result = self->regA_value - self->regB_value;
+        prevAluResult = out->alu_result, prevAluResult = self->regA_value - self->regB_value;
         break;
     case OP_MUL:
-        out->alu_result = self->regA_value * self->regB_value;
+        prevAluResult = out->alu_result = self->regA_value * self->regB_value;
         break;
     case OP_MOVI:
         // TODO
         break;
     case OP_AND:
-        out->alu_result = self->regA_value & self->regB_value;
+        prevAluResult = out->alu_result = self->regA_value & self->regB_value;
         break;
     case OP_ORI:
         // TODO
         break;
     case OP_LSL:
         // TODO
-        out->alu_result = self->regB_value << self->SHAMT;
+        prevAluResult = out->alu_result = self->regB_value << self->SHAMT;
         break;
     case OP_LSR:
         // TODO
-        out->alu_result = self->regB_value >> self->SHAMT;
+        prevAluResult = out->alu_result = self->regB_value >> self->SHAMT;
         break;
     case OP_MOVR:
         // TODO
         memAddress = self->regB_value + self->immediate;
         out->mem_read = memAddress;
+        prevAluResult = -1;
         break;
     case OP_MOVM:
         // TODO
         memAddress = self->regB_value + self->immediate;
         out->mem_write = memAddress;
+        break;
+    case OP_JEQ:
+        if(self->dest_reg == self->regA_value){
+            pc->data = pc->data + self->immediate;
+            out->flush = true;
+        }
+        break;
+    case OP_JMP:
+        pc->data = pc->data & 0xF000000 + self->address;
+        out->flush = true;
         break;
     default:
         break;

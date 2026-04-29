@@ -2,6 +2,7 @@
 #define EXECUTE_TEMPLATE
 
 #include <stdint.h>
+#include "registerFile.h"
 #include "pipeline.h"
 typedef enum
 {
@@ -21,6 +22,6 @@ typedef enum
 
 } OpCode;
 
-void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, MEM_WB_Buffer *wb);
+void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var_inbtw_mres, gpr* pc)
 
 #endif // EXECUTE_TEMPLATE

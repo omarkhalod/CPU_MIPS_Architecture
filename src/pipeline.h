@@ -12,7 +12,7 @@ typedef struct
 
 typedef struct
 {
-    uint8_t dest_reg;
+    uint32_t dest_reg;
 
     // R - Format
     uint8_t op;
@@ -39,6 +39,7 @@ typedef struct
     int dest_reg;
     int mem_read, mem_write;
     bool reg_write;
+    bool flush; //flag to flush pipeline
 } EX_MEM_Buffer;
 
 typedef struct

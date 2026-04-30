@@ -1,0 +1,15 @@
+//Test Scenario 1
+ADD R1 R2 R3
+ADD R4 R1 R5
+
+//Test Scenario 2
+MOVR R1 R2 IMM
+ADD R4 R1 R3
+
+//Test Scenario 3
+ADD R1 R2 R3
+MOVM R1 R2 IMM
+
+//Test Scenario 4
+ADD R1 R2 R3
+MOVM R2 R1 IMM

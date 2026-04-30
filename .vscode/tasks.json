@@ -6,8 +6,9 @@
             "label": "C/C++: gcc.exe build entire project",
             "command": "powershell",
             "args": [
+                "-NoProfile",
                 "-Command",
-                "$src = Join-Path $PWD \"src\"; $out = Join-Path $src \"main.exe\"; $files = Get-ChildItem -Path $src -Recurse -Filter *.c | Select-Object -ExpandProperty FullName; & \"C:\\MinGW\\bin\\gcc.exe\" -fdiagnostics-color=always -g $files -I $src -o $out"
+                "Set-Location src; $files = Get-ChildItem -Recurse -Filter '*.c' | Select-Object -ExpandProperty FullName; & 'C:\\MinGW\\bin\\gcc.exe' -fdiagnostics-color=always -g $files -I . -o main.exe"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

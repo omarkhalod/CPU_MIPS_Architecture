@@ -79,7 +79,7 @@ void ID_stage_decode(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
         out->regB_updated = true;
     }
 
-    printf("[%d, %d]", inUseArray[0], inUseArray[1]);
+    printf("inUseArray: [%d, %d]\n", inUseArray[0], inUseArray[1]);
 
 
     uint16_t shamt = instruction & 0x1FFF;

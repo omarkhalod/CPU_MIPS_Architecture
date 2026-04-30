@@ -47,7 +47,7 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var
         prevAluResult = out->alu_result = self->regA_value + self->regB_value;
         break;
     case OP_SUB:
-        prevAluResult = out->alu_result, prevAluResult = self->regA_value - self->regB_value;
+        prevAluResult = out->alu_result = self->regA_value - self->regB_value;
         break;
     case OP_MUL:
         prevAluResult = out->alu_result = self->regA_value * self->regB_value;
@@ -87,7 +87,7 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var
         }
         break;
     case OP_JMP:
-        pc->data = pc->data & 0xF000000 + self->address;
+        pc->data = (pc->data & 0xF0000000) | self->address;
         out->flush = true;
         break;
     default:

@@ -11,29 +11,29 @@
 #include "EX_stage.h"
 #include "registerFile.h"
 #include <stdio.h>
-int prevAluResult;
 
-void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var_inbtw_mres, gpr* pc)
+void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, MEM_WB_Buffer *mem_wb, gpr* R, gpr* pc)
 {
     // clear any previous data from out
+    out->mem_read = -1;
+    out->mem_write = -1;
+    out->flush = false;
 
-    //  check if any of the values for reg are not up to date
-    if (self->regA_updated)
+    // Forwarding logic for data hazards
+    if (self->regA_updated) //I think dequeueing should happen here
     {
-        if(prevAluResult == -1){
-            self->regA_updated = omar_yahia_var_inbtw_mres;
-        } else{
-            self->regA_value = prevAluResult;
-            self->regA_updated = false;
+        if (mem_wb->reg_write && mem_wb->dest_reg == self->rs1) {
+            self->regA_value = mem_wb->data; // Distance 1: value is in MEM_WB
+        } else {
+            self->regA_value = R[self->rs1].data; // Distance 2: value has been written to register file
         }
     }
-    else if (self->regB_updated)
+    if (self->regB_updated) //And dequeueing also here
     {
-        if(prevAluResult == -1){
-            self->regB_updated = omar_yahia_var_inbtw_mres;
-        } else{
-            self->regB_value = prevAluResult;
-            self->regB_updated = false;
+        if (mem_wb->reg_write && mem_wb->dest_reg == self->rs2) {
+            self->regB_value = mem_wb->data;
+        } else {
+            self->regB_value = R[self->rs2].data;
         }        
     }
     // pass the des_reg through
@@ -44,50 +44,49 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var
     switch (self->op)
     {
     case OP_ADD:
-        prevAluResult = out->alu_result = self->regA_value + self->regB_value;
+        out->alu_result = self->regA_value + self->regB_value;
         break;
     case OP_SUB:
-        prevAluResult = out->alu_result = self->regA_value - self->regB_value;
+        out->alu_result = self->regA_value - self->regB_value;
         break;
     case OP_MUL:
-        prevAluResult = out->alu_result = self->regA_value * self->regB_value;
+        out->alu_result = self->regA_value * self->regB_value;
         break;
     case OP_MOVI:
-        // TODO
+        out->alu_result = self->immediate;
         break;
     case OP_AND:
-        prevAluResult = out->alu_result = self->regA_value & self->regB_value;
+        out->alu_result = self->regA_value & self->regB_value;
         break;
     case OP_ORI:
-        // TODO
+        out->alu_result = self->regA_value | self->immediate;
         break;
     case OP_LSL:
         // TODO
-        prevAluResult = out->alu_result = self->regB_value << self->SHAMT;
+        out->alu_result = self->regB_value << self->SHAMT;
         break;
     case OP_LSR:
         // TODO
-        prevAluResult = out->alu_result = self->regB_value >> self->SHAMT;
+        out->alu_result = self->regB_value >> self->SHAMT;
         break;
     case OP_MOVR:
-        // TODO
-        memAddress = self->regB_value + self->immediate;
+        memAddress = self->regA_value + self->immediate;
         out->mem_read = memAddress;
-        prevAluResult = -1;
         break;
     case OP_MOVM:
-        // TODO
-        memAddress = self->regB_value + self->immediate;
+        memAddress = self->regA_value + self->immediate;
         out->mem_write = memAddress;
         break;
     case OP_JEQ:
         if(self->dest_reg == self->regA_value){
-            pc->data = pc->data + self->immediate;
+            // Subtract 1 to account for the extra IF fetch that advanced the global PC
+            pc->data = pc->data - 1 + self->immediate;
             out->flush = true;
         }
         break;
     case OP_JMP:
-        pc->data = (pc->data & 0xF0000000) | self->address;
+        // Subtract 1 to ensure we use the upper 4 segment bits of the JMP instruction itself
+        pc->data = ((pc->data - 1) & 0xF0000000) | self->address;
         out->flush = true;
         break;
     default:
@@ -112,7 +111,7 @@ int main(int argc, char const *argv[])
     EX_MEM_Buffer output;
     MEM_WB_Buffer s;
 
-    EX_execute(&execute, &output, &s);
+    EX_execute(&execute, &output, &s, NULL, NULL);
 
     printf("output is %d", output.alu_result);
 

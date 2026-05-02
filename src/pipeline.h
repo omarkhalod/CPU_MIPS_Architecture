@@ -29,6 +29,8 @@ typedef struct
     // handeling data hazards
     bool regA_updated;
     bool regB_updated;
+    uint8_t rs1;
+    uint8_t rs2;
 
     bool reg_write;
 } ID_EX_Buffer;

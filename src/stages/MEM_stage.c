@@ -2,7 +2,7 @@
 #include "MEM_stage.h"
 #include "memory.h"
 
-void MEM_execute(EX_MEM_Buffer *in, MEM_WB_Buffer *out, memory *mem)
+void MEM_execute(EX_MEM_Buffer *in, MEM_WB_Buffer *out, memory *mem, uint32_t* omar_yahia_var_inbtw_mres)
 {
 
     out->dest_reg = in->dest_reg; // forward to WB to know which register to write back to
@@ -13,6 +13,7 @@ void MEM_execute(EX_MEM_Buffer *in, MEM_WB_Buffer *out, memory *mem)
         int address = in->mem_read;
 
         out->data = mem[address].data; // goes to MEM_WB_Buffer
+        (*omar_yahia_var_inbtw_mres) = out->data;
 
         printf("MEM: LOAD - Read value %d from address %d\n", out->data, address);  
     }

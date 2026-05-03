@@ -25,71 +25,92 @@ bool inUseContains(uint32_t R){
 
 void ID_stage_decode(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
     
-    out->regA_updated = false;
-    out->regB_updated = false;
-
     uint32_t instruction = in->instruction;
-    
+    // Decode everything at the beginning of the file
     uint8_t opcode = (instruction >> 28) & 0xF;
-    out->op = opcode;
-    printf("opcode: %d \n", opcode);
-
-    if(opcode == 7){
-        out->address = instruction & 0x0FFFFFFF;
-        return;
-    }
-
     uint8_t R1 = (instruction >> 23) & 0x1F;
     uint8_t R2 = (instruction >> 18) & 0x1F;
-    printf("destination register: R%d \n", R1);
-    printf("operand 1 register: R%d \n", R2);
-
-
-    int R2Value = R[R2].data;
-    printf("operand register 1 value: %d \n", R2Value);
-    
-
-    out->dest_reg = R1;
-    
-    enqueueInUse(R1); //we will dequeue after WB in pipeline /.,mnb/.,mnbvcxzasdfghjkl;poiuytrewq
-
-    out->regA_value = R2Value;
-    
-    if(opcode == 3 || opcode == 4 || opcode == 6 || opcode == 10 || opcode ==11){
-        if(opcode == 4){
-            out->dest_reg = R[R1].data;
-        }
-        uint32_t imm = instruction & 0x0003FFFF; 
-        out->immediate = imm;
-        return;
-    }
-
     uint8_t R3 = (instruction >> 13) & 0x1F;
-    printf("operand 2 register: R%d \n", R3);
-
-    int R3Value = R[R3].data;
-    printf("operand 2 regiseter value: %d \n", R3Value);
-
-
-    if(inUseContains(R2)){
-        out->regA_updated = true;
-    }
-
-    if(inUseContains(R3)){
-        out->regB_updated = true;
-    }
-
-    printf("inUseArray: [%d, %d]\n", inUseArray[0], inUseArray[1]);
-
-
     uint16_t shamt = instruction & 0x1FFF;
+    uint32_t imm = instruction & 0x0003FFFF; 
+    uint32_t address = instruction & 0x0FFFFFFF;
+
+    printf("opcode: %d \n", opcode);
+    printf("inUseArray: [%d, %d]\n", inUseArray[0], inUseArray[1]);
     printf("shamt: %d \n", shamt);
 
-    if(opcode == 4 || opcode == 7 || opcode == 11){
-        out->reg_write = false;
-    }else{
-        out->reg_write = true;
-    }
-    out->regB_value = R3Value;
+    out->op = opcode;
     out->SHAMT = shamt;
+    out->immediate = imm;
+    out->address = address;
+    out->reg_write = true;
+
+    // Switch logic mapping variables and checking hazards
+    switch (opcode) {
+        case 0: // OP_ADD
+        case 1: // OP_SUB
+        case 2: // OP_MUL
+        case 5: // OP_AND
+            printf("destination register: R%d \n", R3);
+            printf("operand 1 register: R%d \n", R1);
+            printf("operand register 1 value: %d \n", R[R1].data);
+            printf("operand 2 register: R%d \n", R2);
+            printf("operand 2 regiseter value: %d \n", R[R2].data);
+
+            out->dest_reg = R3;
+            out->regA_value = R[R1].data;
+            out->regB_value = R[R2].data;
+            if (inUseContains(R1)) out->regA_updated = true;
+            if (inUseContains(R2)) out->regB_updated = true;
+            enqueueInUse(R3);
+            break;
+            
+        case 3:  // OP_MOVI
+        case 6:  // OP_ORI
+        case 10: // OP_MOVR
+            out->dest_reg = R1;
+            out->regA_value = R[R2].data;
+            if (inUseContains(R2)) out->regA_updated = true;
+            enqueueInUse(R1);
+            break;
+
+        case 4: // OP_JEQ
+            out->dest_reg = R[R1].data; 
+            out->regA_value = R[R2].data;
+            if (inUseContains(R2)) out->regA_updated = true;
+            out->reg_write = false;
+            break;
+
+        case 7: // OP_JMP
+            out->reg_write = false;
+            break;
+
+        case 8: // OP_LSL
+        case 9: // OP_LSR
+            printf("destination register: R%d \n", R1);
+            printf("operand 1 register: R%d \n", R2);
+            printf("operand register 1 value: %d \n", R[R2].data);
+            printf("operand 2 register: R%d \n", R3);
+            printf("operand 2 regiseter value: %d \n", R[R3].data);
+            printf("shamt: %d \n", shamt);
+                        
+            out->dest_reg = R1;
+            out->regA_value = R[R2].data;
+            out->regB_value = R[R3].data;
+            if (inUseContains(R2)) out->regA_updated = true;
+            if (inUseContains(R3)) out->regB_updated = true;
+            enqueueInUse(R1);
+            break;
+
+        case 11: // OP_MOVM
+            out->dest_reg = R1;
+            out->regA_value = R[R2].data;
+            if (inUseContains(R2)) out->regA_updated = true;
+            out->reg_write = false;
+            break;
+
+        default:
+            out->reg_write = false;
+            break;
+    }
 }

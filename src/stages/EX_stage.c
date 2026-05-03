@@ -27,7 +27,7 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var
             self->regA_updated = false;
         }
     }
-    else if (self->regB_updated)
+    if (self->regB_updated)
     {
         if(prevAluResult == -1){
             self->regB_updated = omar_yahia_var_inbtw_mres;

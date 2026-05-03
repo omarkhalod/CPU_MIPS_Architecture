@@ -1,8 +1,10 @@
+#include <stdint.h>
 #ifndef MEMORY_H
 #define MEMORY_H
 
 typedef struct{
-    int data;
+    uint32_t data;
+    int valid;
 } memory;
 
 memory* createMemory();

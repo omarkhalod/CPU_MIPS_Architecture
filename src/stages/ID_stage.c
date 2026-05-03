@@ -23,7 +23,7 @@ bool inUseContains(uint32_t R){
     return inUseArray[0] == R || inUseArray[1] == R;
 }
 
-void ID_stage_decode(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
+void ID_execute(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
     
     uint32_t instruction = in->instruction;
     // Decode everything at the beginning of the file
@@ -44,6 +44,7 @@ void ID_stage_decode(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
     out->immediate = imm;
     out->address = address;
     out->reg_write = true;
+    out->instructionNumber = in->instructionNumber;
 
     // Switch logic mapping variables and checking hazards
     switch (opcode) {

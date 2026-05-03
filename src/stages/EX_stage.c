@@ -15,6 +15,8 @@ int prevAluResult;
 
 void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var_inbtw_mres, gpr* pc)
 {
+
+    out->instructionNumber = self->instructionNumber;
     // clear any previous data from out
 
     //  check if any of the values for reg are not up to date

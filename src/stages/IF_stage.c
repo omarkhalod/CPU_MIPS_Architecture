@@ -8,4 +8,5 @@
 
 void IF_stage(memory* mem, gpr* pc, IF_ID_Buffer* out) {
   out->instruction = mem[pc->data].data;
+  pc->data++;
 }

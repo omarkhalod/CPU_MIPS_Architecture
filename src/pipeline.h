@@ -7,7 +7,7 @@
 typedef struct
 {
     uint32_t instruction;
-    int pc;
+    int instructionNumber;
 } IF_ID_Buffer;
 
 typedef struct
@@ -31,6 +31,7 @@ typedef struct
     bool regB_updated;
 
     bool reg_write;
+    int instructionNumber;
 } ID_EX_Buffer;
 
 typedef struct
@@ -40,6 +41,7 @@ typedef struct
     int mem_read, mem_write;
     bool reg_write;
     bool flush; //flag to flush pipeline
+    int instructionNumber;
 } EX_MEM_Buffer;
 
 typedef struct
@@ -47,6 +49,7 @@ typedef struct
     int data;
     int dest_reg;
     bool reg_write;
+    int instructionNumber;
 } MEM_WB_Buffer;
 
 #endif

@@ -10,7 +10,7 @@ memory* createMemory(){
 
     for (int i = 0; i < 2048; i++) {
         res[i].data = 0;
-        res[i].valid = 0; // this will be set to 1 when reading from disk to memory
+        res[i].isValid = false; // this will be set to true when reading from disk to memory
     }
     
     return res;

@@ -11,12 +11,15 @@
 
 int main(int argc, char const *argv[])
 {   
-
+    
     IF_ID_Buffer* if_id = calloc(1, sizeof(IF_ID_Buffer));
     ID_EX_Buffer* id_ex = calloc(1, sizeof(ID_EX_Buffer));
     EX_MEM_Buffer* ex_mem = calloc(1, sizeof(EX_MEM_Buffer));
     MEM_WB_Buffer* mem_wb = calloc(1, sizeof(MEM_WB_Buffer));
     uint32_t* omar_yahia_var_inbtw_mres = malloc(sizeof(uint32_t));
+    char* r_instructions = {"ADD", "SUB", "MUL", "AND", "LSL", "LSR"};
+    char* i_instructions = {"MOVI", "JEQ", "ORI", "MOVR", "MOVM"};
+    char* j_instructions = {"JMP"};
     (*omar_yahia_var_inbtw_mres) = -1;
     
     memory* memory = createMemory();

@@ -17,23 +17,33 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var
 {
 
     out->instructionNumber = self->instructionNumber;
-    // clear any previous data from out
+
+    // clearing the mem_read and mem_write fields by default, only set them for load and store instructions
+    out->mem_read = -1;
+    out->mem_write = -1;
+    
 
     //  check if any of the values for reg are not up to date
     if (self->regA_updated)
     {
+        printf("EX: Resolving RegA hazard\n");
         if(prevAluResult == -1){
+            printf("EX: RegA hazard waiting on memory load\n");
             self->regA_updated = omar_yahia_var_inbtw_mres;
         } else{
+            printf("EX: RegA hazard resolved with prevAluResult = %d\n", prevAluResult);
             self->regA_value = prevAluResult;
             self->regA_updated = false;
         }
     }
     if (self->regB_updated)
     {
+        printf("EX: Resolving RegB hazard\n");
         if(prevAluResult == -1){
+            printf("EX: RegB hazard waiting on memory load\n");
             self->regB_updated = omar_yahia_var_inbtw_mres;
         } else{
+            printf("EX: RegB hazard resolved with prevAluResult = %d\n", prevAluResult);
             self->regB_value = prevAluResult;
             self->regB_updated = false;
         }        
@@ -47,18 +57,22 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var
     {
     case OP_ADD:
         prevAluResult = out->alu_result = self->regA_value + self->regB_value;
+        printf("EX: ADD %d + %d = %d\n", self->regA_value, self->regB_value, out->alu_result);
         break;
     case OP_SUB:
         prevAluResult = out->alu_result = self->regA_value - self->regB_value;
+        printf("EX: SUB %d - %d = %d\n", self->regA_value, self->regB_value, out->alu_result);
         break;
     case OP_MUL:
         prevAluResult = out->alu_result = self->regA_value * self->regB_value;
+        printf("EX: MUL %d * %d = %d\n", self->regA_value, self->regB_value, out->alu_result);
         break;
     case OP_MOVI:
         // TODO
         break;
     case OP_AND:
         prevAluResult = out->alu_result = self->regA_value & self->regB_value;
+        printf("EX: AND %d & %d = %d\n", self->regA_value, self->regB_value, out->alu_result);
         break;
     case OP_ORI:
         // TODO
@@ -66,31 +80,38 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var
     case OP_LSL:
         // TODO
         prevAluResult = out->alu_result = self->regB_value << self->SHAMT;
+        printf("EX: LSL %d << %d = %d\n", self->regB_value, self->SHAMT, out->alu_result);
         break;
     case OP_LSR:
         // TODO
         prevAluResult = out->alu_result = self->regB_value >> self->SHAMT;
+        printf("EX: LSR %d >> %d = %d\n", self->regB_value, self->SHAMT, out->alu_result);
         break;
     case OP_MOVR:
         // TODO
         memAddress = self->regB_value + self->immediate;
         out->mem_read = memAddress;
         prevAluResult = -1;
+        printf("EX: MOVR calculated address = %d\n", memAddress);
         break;
     case OP_MOVM:
         // TODO
         memAddress = self->regB_value + self->immediate;
         out->mem_write = memAddress;
+        printf("EX: MOVM calculated address = %d\n", memAddress);
         break;
     case OP_JEQ:
+        printf("EX: JEQ comparing %d and %d\n", self->dest_reg, self->regA_value);
         if(self->dest_reg == self->regA_value){
             pc->data = pc->data + self->immediate;
             out->flush = true;
+            printf("EX: JEQ condition met, branch taken to %d\n", pc->data);
         }
         break;
     case OP_JMP:
         pc->data = (pc->data & 0xF0000000) | self->address;
         out->flush = true;
+        printf("EX: JMP jumping to %d\n", pc->data);
         break;
     default:
         break;

@@ -8,5 +8,6 @@
 
 void IF_stage(memory* mem, gpr* pc, IF_ID_Buffer* out) {
   out->instruction = mem[pc->data].data;
+  printf("Fetched instruction 0x%08X from memory address %d\n", out->instruction, pc->data);
   pc->data++;
 }

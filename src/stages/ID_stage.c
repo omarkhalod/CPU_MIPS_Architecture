@@ -7,8 +7,10 @@
 uint32_t inUseArray[] = {-1,-1}; 
 
 void dequeueInUse(){
+    printf("before dequeuing: [%d, %d]\n", inUseArray[0], inUseArray[1]);
     inUseArray[0] = inUseArray[1];
     inUseArray[1] = -1;
+    printf("after dequeuing: [%d, %d]\n", inUseArray[0], inUseArray[1]);
 }
 
 void enqueueInUse(uint32_t R){
@@ -25,6 +27,9 @@ bool inUseContains(uint32_t R){
 
 void ID_execute(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
     
+    // Shift the pipeline hazard tracker forward once per cycle
+    // dequeueInUse();
+
     uint32_t instruction = in->instruction;
     // Decode everything at the beginning of the file
     uint8_t opcode = (instruction >> 28) & 0xF;
@@ -36,7 +41,6 @@ void ID_execute(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
     uint32_t address = instruction & 0x0FFFFFFF;
 
     printf("opcode: %d \n", opcode);
-    printf("inUseArray: [%d, %d]\n", inUseArray[0], inUseArray[1]);
     printf("shamt: %d \n", shamt);
 
     out->op = opcode;
@@ -45,6 +49,8 @@ void ID_execute(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
     out->address = address;
     out->reg_write = true;
     out->instructionNumber = in->instructionNumber;
+    out->regA_updated = false;
+    out->regB_updated = false;
 
     // Switch logic mapping variables and checking hazards
     switch (opcode) {
@@ -114,4 +120,7 @@ void ID_execute(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
             out->reg_write = false;
             break;
     }
+
+    printf("inUseArray after ID stage: [%d, %d]\n", inUseArray[0], inUseArray[1]);
+
 }

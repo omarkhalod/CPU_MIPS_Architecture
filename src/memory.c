@@ -2,12 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "memory.h"
-#include "main.c"
 
-int programSize = 0;
-char* r_instructions = {"ADD", "SUB", "MUL", "AND", "LSL", "LSR"}; // till i know where to properly them
-char* i_instructions = {"MOVI", "JEQ", "ORI", "MOVR", "MOVM"};
-char* j_instructions = {"JMP"};
+char* r_instructions[] = {"ADD", "SUB", "MUL", "AND", "LSL", "LSR"}; // till i know where to properly them
+char* i_instructions[] = {"MOVI", "JEQ", "ORI", "MOVR", "MOVM"};
+char* j_instructions[] = {"JMP"};
 
 memory* createMemory(void){
     memory* res = malloc(sizeof(memory) * 2048);
@@ -22,11 +20,15 @@ memory* createMemory(void){
 }
 
 void loadProgramFileToMemory(memory* mem) {
-    FILE *file = fopen("tests.txt", "r"); // tests.txt is just a placeholder**
+    FILE *file = fopen("program.txt", "r"); // tests.txt is just a placeholder**
+    if(file == NULL){
+      // Support running the executable from the workspace root as well.
+      file = fopen("src/program.txt", "r");
+    }
     int index = 0;
     if(file == NULL){
       perror("Error opening file");
-      return 1;
+      return;
     }
 
     char line[512]; // is it possible to know the max size of the instruction line in txt? i think 512 is enough
@@ -46,31 +48,34 @@ void loadProgramFileToMemory(memory* mem) {
         }
 
         char* opcode_str = parts[0]; //opcode
-        if(arrayContainsElement(r_instructions, 6, opcode_str)) { // el 6 di wehsha awi mesh ayezha hard coded ma3rafsh
+        // To avoid hardcoding the array size, you can calculate it like this:
+        if(arrayContainsElement(r_instructions, sizeof(r_instructions)/sizeof(r_instructions[0]), opcode_str)) {
           int reg1 = regNameToNumber(parts[1]);
           int reg2 = regNameToNumber(parts[2]); 
           int reg3 = regNameToNumber(parts[3]); 
           int shamt = atoi(parts[4]); 
-          (mem + index)->data = encodeR(atoi(opcode_str), reg1, reg2, reg3, shamt);
-
+          (mem + index)->data = encodeR(opcodeStringToInt(opcode_str), reg1, reg2, reg3, shamt);
+          (mem + index)->isValid = true;
         } 
 
-        else if (arrayContainsElement(i_instructions, 5, opcode_str)) {
+        else if (arrayContainsElement(i_instructions, sizeof(i_instructions)/sizeof(i_instructions[0]), opcode_str)) {
           int reg1 = regNameToNumber(parts[1]);
           int reg2 = regNameToNumber(parts[2]);
           int imm = atoi(parts[3]);
-          (mem + index)->data = encodeI(atoi(opcode_str), reg1, reg2, imm);
-
+          (mem + index)->data = encodeI(opcodeStringToInt(opcode_str), reg1, reg2, imm);
+          (mem + index)->isValid = true;
         }
 
-        else if(arrayContainsElement(j_instructions, 1, opcode_str)) {
+        else if(arrayContainsElement(j_instructions, sizeof(j_instructions)/sizeof(j_instructions[0]), opcode_str)) {
           int address = atoi(parts[1]);
-          (mem + index)->data = encodeJ(atoi(opcode_str), address);
-
+          (mem + index)->data = encodeJ(opcodeStringToInt(opcode_str), address);
+          (mem + index)->isValid = true;
         }
 
         index++;
     }
+
+      fclose(file);
 }
 
 bool arrayContainsElement(char* array[], int arrayLength, char* element){
@@ -86,6 +91,7 @@ bool arrayContainsElement(char* array[], int arrayLength, char* element){
 
 int regNameToNumber(char* reg) {
   int reg_num = atoi(reg + 1); // should work for multiple digits also like R14 for example
+  return reg_num;
 }
 
 int opcodeStringToInt(char* opcode_str) {

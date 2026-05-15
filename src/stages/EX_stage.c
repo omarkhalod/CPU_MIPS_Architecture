@@ -103,7 +103,7 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var
     case OP_JEQ:
         printf("EX: JEQ comparing %d and %d\n", self->dest_reg, self->regA_value);
         if(self->dest_reg == self->regA_value){
-            pc->data = pc->data + self->immediate;
+            pc->data = pc->data - 1 + self->immediate;
             out->flush = true;
             printf("EX: JEQ condition met, branch taken to %d\n", pc->data);
         }

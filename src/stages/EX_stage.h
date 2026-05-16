@@ -22,6 +22,6 @@ typedef enum
 
 } OpCode;
 
-void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t* omar_yahia_var_inbtw_mres, gpr* pc);
+void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var_inbtw_mres, gpr *pc);
 
 #endif // EXECUTE_TEMPLATE

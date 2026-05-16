@@ -39,7 +39,10 @@ typedef struct
     int dest_reg;
     int mem_read, mem_write;
     bool reg_write;
-    bool flush; //flag to flush pipeline
+    bool flush; // flag to flush pipeline
+
+    bool overflow;
+    bool carry;
 } EX_MEM_Buffer;
 
 typedef struct

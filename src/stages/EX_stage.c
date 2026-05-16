@@ -11,11 +11,12 @@
 #include "EX_stage.h"
 #include "registerFile.h"
 #include <stdio.h>
-int prevAluResult;
 
 #define BYTE_MASK 0xFF
 #define CARRY_MASK 0x100
 #define SIGN_MASK 0x80
+
+int prevAluResult;
 
 static void set_add_flags(EX_MEM_Buffer *out, uint32_t a, uint32_t b)
 {
@@ -25,10 +26,10 @@ static void set_add_flags(EX_MEM_Buffer *out, uint32_t a, uint32_t b)
 
     out->carry = (result & CARRY_MASK) == CARRY_MASK;
 
-    int carry_into_sign = ((temp1 & 0x7F) + (temp2 & 0x7F)) & SIGN_MASK;
-    int carry_out_sign = result & CARRY_MASK;
+    int carry_into_sign = (((temp1 & 0x7F) + (temp2 & 0x7F)) & SIGN_MASK) != 0;
+    int carry_out_sign = (result & CARRY_MASK) != 0;
 
-    out->overflow = ((carry_into_sign ? 1 : 0) ^ (carry_out_sign ? 1 : 0));
+    out->overflow = carry_into_sign ^ carry_out_sign;
 }
 
 static void set_sub_flags(EX_MEM_Buffer *out, uint32_t a, uint32_t b)
@@ -48,29 +49,41 @@ static void set_sub_flags(EX_MEM_Buffer *out, uint32_t a, uint32_t b)
 
 void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var_inbtw_mres, gpr *pc)
 {
+    out->instructionNumber = self->instructionNumber;
+
+    out->mem_read = -1;
+    out->mem_write = -1;
+
     out->overflow = false;
     out->carry = false;
 
     if (self->regA_updated)
     {
+        printf("EX: Resolving RegA hazard\n");
         if (prevAluResult == -1)
         {
-            self->regA_updated = omar_yahia_var_inbtw_mres;
+            printf("EX: RegA hazard waiting on memory load\n");
+            self->regA_value = omar_yahia_var_inbtw_mres;
         }
         else
         {
+            printf("EX: RegA hazard resolved with prevAluResult = %d\n", prevAluResult);
             self->regA_value = prevAluResult;
             self->regA_updated = false;
         }
     }
-    else if (self->regB_updated)
+
+    if (self->regB_updated)
     {
+        printf("EX: Resolving RegB hazard\n");
         if (prevAluResult == -1)
         {
-            self->regB_updated = omar_yahia_var_inbtw_mres;
+            printf("EX: RegB hazard waiting on memory load\n");
+            self->regB_value = omar_yahia_var_inbtw_mres;
         }
         else
         {
+            printf("EX: RegB hazard resolved with prevAluResult = %d\n", prevAluResult);
             self->regB_value = prevAluResult;
             self->regB_updated = false;
         }
@@ -85,11 +98,15 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
     case OP_ADD:
         prevAluResult = out->alu_result = self->regA_value + self->regB_value;
         set_add_flags(out, self->regA_value, self->regB_value);
+        printf("EX: ADD %d + %d = %d | Carry = %d | Overflow = %d\n",
+               self->regA_value, self->regB_value, out->alu_result, out->carry, out->overflow);
         break;
 
     case OP_SUB:
         prevAluResult = out->alu_result = self->regA_value - self->regB_value;
         set_sub_flags(out, self->regA_value, self->regB_value);
+        printf("EX: SUB %d - %d = %d | Carry = %d | Overflow = %d\n",
+               self->regA_value, self->regB_value, out->alu_result, out->carry, out->overflow);
         break;
 
     case OP_MUL:
@@ -107,6 +124,8 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
 
             out->overflow = signedResult > 127 || signedResult < -128;
         }
+        printf("EX: MUL %d * %d = %d | Carry = %d | Overflow = %d\n",
+               self->regA_value, self->regB_value, out->alu_result, out->carry, out->overflow);
         break;
 
     case OP_MOVI:
@@ -114,6 +133,7 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
 
     case OP_AND:
         prevAluResult = out->alu_result = self->regA_value & self->regB_value;
+        printf("EX: AND %d & %d = %d\n", self->regA_value, self->regB_value, out->alu_result);
         break;
 
     case OP_ORI:
@@ -122,34 +142,42 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
     case OP_LSL:
         prevAluResult = out->alu_result = self->regB_value << self->SHAMT;
         out->carry = ((self->regB_value << self->SHAMT) & CARRY_MASK) == CARRY_MASK;
+        printf("EX: LSL %d << %d = %d | Carry = %d | Overflow = %d\n",
+               self->regB_value, self->SHAMT, out->alu_result, out->carry, out->overflow);
         break;
 
     case OP_LSR:
         prevAluResult = out->alu_result = self->regB_value >> self->SHAMT;
+        printf("EX: LSR %d >> %d = %d\n", self->regB_value, self->SHAMT, out->alu_result);
         break;
 
     case OP_MOVR:
         memAddress = self->regB_value + self->immediate;
         out->mem_read = memAddress;
         prevAluResult = -1;
+        printf("EX: MOVR calculated address = %d\n", memAddress);
         break;
 
     case OP_MOVM:
         memAddress = self->regB_value + self->immediate;
         out->mem_write = memAddress;
+        printf("EX: MOVM calculated address = %d\n", memAddress);
         break;
 
     case OP_JEQ:
+        printf("EX: JEQ comparing %d and %d\n", self->dest_reg, self->regA_value);
         if (self->dest_reg == self->regA_value)
         {
-            pc->data = pc->data + self->immediate;
+            pc->data = pc->data - 1 + self->immediate;
             out->flush = true;
+            printf("EX: JEQ condition met, branch taken to %d\n", pc->data);
         }
         break;
 
     case OP_JMP:
         pc->data = (pc->data & 0xF0000000) | self->address;
         out->flush = true;
+        printf("EX: JMP jumping to %d\n", pc->data);
         break;
 
     default:

@@ -28,14 +28,9 @@ int main(int argc, char const *argv[])
     MEM_WB_Buffer* mem_wb = calloc(1, sizeof(MEM_WB_Buffer));
     uint32_t* omar_yahia_var_inbtw_mres = malloc(sizeof(uint32_t));
     (*omar_yahia_var_inbtw_mres) = -1;
-    // char* r_instructions[] = {"ADD", "SUB", "MUL", "AND", "LSL", "LSR"};
-    // char* i_instructions[] = {"MOVI", "JEQ", "ORI", "MOVR", "MOVM"};
-    // char* j_instructions[] = {"JMP"};    
-    
+
     memory* memory = createMemory();
-    // function to read from disk to memory
     gpr* R = createRegisters();
-    // function to initialize some register data
     gpr* pc = createPC();
 
     loadProgramFileToMemory(memory);
@@ -46,6 +41,9 @@ int main(int argc, char const *argv[])
     R[2].data = 10;
     R[4].data = 30;
     R[5].data = 40;
+
+    memory[1033].data = 100; // R2 (10) + 1023 = 1033
+    memory[1033].isValid = true;
 
     id_ex->regA_updated = false;
     id_ex->regB_updated = false;
@@ -78,11 +76,15 @@ int main(int argc, char const *argv[])
                     hasIdStarted = false;
                     skipInstructionFetchOnce = true;
                 }
+        } else {
+            hasMemStarted = false;
             }
             if(hasIdStarted){
                 printf("=================Decoding Instruction %d=================\n", if_id->instructionNumber);
                 ID_execute(if_id, id_ex, R);
                 hasExStarted = true;
+        } else {
+            hasExStarted = false;
             }
 
             if(skipInstructionFetchOnce){

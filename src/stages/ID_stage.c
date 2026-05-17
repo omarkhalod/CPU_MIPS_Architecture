@@ -72,9 +72,15 @@ void ID_execute(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
             enqueueInUse(R3);
             break;
             
-        case 3:  // OP_MOVI
+        case 3: // OP_MOVI
+            printf("ID: Decoded MOVI. Dest: R%d, Imm: %d\n", R1, imm);
+            out->dest_reg = R1;
+            enqueueInUse(R1);
+            break;
+
         case 6:  // OP_ORI
         case 10: // OP_MOVR
+            printf("ID: Decoded ORI/MOVR. Dest: R%d, Base/Op1: R%d, Imm: %d\n", R1, R2, imm);
             out->dest_reg = R1;
             out->regA_value = R[R2].data;
             if (inUseContains(R2)) out->regA_updated = true;
@@ -82,13 +88,16 @@ void ID_execute(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
             break;
 
         case 4: // OP_JEQ
-            out->dest_reg = R[R1].data; 
-            out->regA_value = R[R2].data;
-            if (inUseContains(R2)) out->regA_updated = true;
+            printf("ID: Decoded JEQ. Comparing R%d and R%d\n", R1, R2);
+            out->regA_value = R[R1].data; 
+            out->regB_value = R[R2].data;
+            if (inUseContains(R1)) out->regA_updated = true;
+            if (inUseContains(R2)) out->regB_updated = true;
             out->reg_write = false;
             break;
 
         case 7: // OP_JMP
+            printf("ID: Decoded JMP. Address: %d\n", address);
             out->reg_write = false;
             break;
 
@@ -97,22 +106,20 @@ void ID_execute(IF_ID_Buffer* in, ID_EX_Buffer* out, gpr* R){
             printf("destination register: R%d \n", R1);
             printf("operand 1 register: R%d \n", R2);
             printf("operand register 1 value: %d \n", R[R2].data);
-            printf("operand 2 register: R%d \n", R3);
-            printf("operand 2 regiseter value: %d \n", R[R3].data);
             printf("shamt: %d \n", shamt);
                         
             out->dest_reg = R1;
             out->regA_value = R[R2].data;
-            out->regB_value = R[R3].data;
             if (inUseContains(R2)) out->regA_updated = true;
-            if (inUseContains(R3)) out->regB_updated = true;
             enqueueInUse(R1);
             break;
 
         case 11: // OP_MOVM
-            out->dest_reg = R1;
+            printf("ID: Decoded MOVM. Src Data: R%d, Base Addr: R%d, Imm: %d\n", R1, R2, imm);
             out->regA_value = R[R2].data;
+            out->regB_value = R[R1].data;
             if (inUseContains(R2)) out->regA_updated = true;
+            if (inUseContains(R1)) out->regB_updated = true;
             out->reg_write = false;
             break;
 

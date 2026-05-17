@@ -59,33 +59,37 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
 
     if (self->regA_updated)
     {
-        printf("EX: Resolving RegA hazard\n");
+        printf("EX: *** HAZARD DETECTED on RegA! ***\n");
+        printf("EX: Resolving RegA hazard...\n");
         if (prevAluResult == -1)
         {
-            printf("EX: RegA hazard waiting on memory load\n");
-            self->regA_value = omar_yahia_var_inbtw_mres;
+            printf("EX: RegA hazard waiting on memory load...\n");
+            self->regA_value = *omar_yahia_var_inbtw_mres;
+            printf("EX: *** HAZARD RESOLVED! *** RegA value updated from memory to %d\n", self->regA_value);
         }
         else
         {
-            printf("EX: RegA hazard resolved with prevAluResult = %d\n", prevAluResult);
             self->regA_value = prevAluResult;
             self->regA_updated = false;
+            printf("EX: *** HAZARD RESOLVED! *** RegA value updated from ALU to %d\n", self->regA_value);
         }
     }
 
     if (self->regB_updated)
     {
-        printf("EX: Resolving RegB hazard\n");
+        printf("EX: *** HAZARD DETECTED on RegB! ***\n");
+        printf("EX: Resolving RegB hazard...\n");
         if (prevAluResult == -1)
         {
-            printf("EX: RegB hazard waiting on memory load\n");
-            self->regB_value = omar_yahia_var_inbtw_mres;
+            printf("EX: RegB hazard waiting on memory load...\n");
+            self->regB_value = *omar_yahia_var_inbtw_mres;
+            printf("EX: *** HAZARD RESOLVED! *** RegB value updated from memory to %d\n", self->regB_value);
         }
         else
         {
-            printf("EX: RegB hazard resolved with prevAluResult = %d\n", prevAluResult);
             self->regB_value = prevAluResult;
             self->regB_updated = false;
+            printf("EX: *** HAZARD RESOLVED! *** RegB value updated from ALU to %d\n", self->regB_value);
         }
     }
 
@@ -129,6 +133,8 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
         break;
 
     case OP_MOVI:
+        prevAluResult = out->alu_result = self->immediate;
+        printf("EX: MOVI setting result to %d\n", out->alu_result);
         break;
 
     case OP_AND:
@@ -137,36 +143,39 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
         break;
 
     case OP_ORI:
+        prevAluResult = out->alu_result = self->regA_value | self->immediate;
+        printf("EX: ORI %d | %d = %d\n", self->regA_value, self->immediate, out->alu_result);
         break;
 
     case OP_LSL:
-        prevAluResult = out->alu_result = self->regB_value << self->SHAMT;
-        out->carry = ((self->regB_value << self->SHAMT) & CARRY_MASK) == CARRY_MASK;
+        prevAluResult = out->alu_result = self->regA_value << self->SHAMT;
+        out->carry = ((self->regA_value << self->SHAMT) & CARRY_MASK) == CARRY_MASK;
         printf("EX: LSL %d << %d = %d | Carry = %d | Overflow = %d\n",
-               self->regB_value, self->SHAMT, out->alu_result, out->carry, out->overflow);
+               self->regA_value, self->SHAMT, out->alu_result, out->carry, out->overflow);
         break;
 
     case OP_LSR:
-        prevAluResult = out->alu_result = self->regB_value >> self->SHAMT;
-        printf("EX: LSR %d >> %d = %d\n", self->regB_value, self->SHAMT, out->alu_result);
+        prevAluResult = out->alu_result = self->regA_value >> self->SHAMT;
+        printf("EX: LSR %d >> %d = %d\n", self->regA_value, self->SHAMT, out->alu_result);
         break;
 
     case OP_MOVR:
-        memAddress = self->regB_value + self->immediate;
+        memAddress = self->regA_value + self->immediate;
         out->mem_read = memAddress;
         prevAluResult = -1;
         printf("EX: MOVR calculated address = %d\n", memAddress);
         break;
 
     case OP_MOVM:
-        memAddress = self->regB_value + self->immediate;
+        memAddress = self->regA_value + self->immediate;
         out->mem_write = memAddress;
-        printf("EX: MOVM calculated address = %d\n", memAddress);
+        out->alu_result = self->regB_value; // Forward value to MEM stage for writing
+        printf("EX: MOVM calculated address = %d, data to write = %d\n", memAddress, out->alu_result);
         break;
 
     case OP_JEQ:
-        printf("EX: JEQ comparing %d and %d\n", self->dest_reg, self->regA_value);
-        if (self->dest_reg == self->regA_value)
+        printf("EX: JEQ comparing %d and %d\n", self->regA_value, self->regB_value);
+        if (self->regA_value == self->regB_value)
         {
             pc->data = pc->data - 1 + self->immediate;
             out->flush = true;

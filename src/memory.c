@@ -39,29 +39,40 @@ void loadProgramFileToMemory(memory* mem) {
         //if R: R3 then SHAMT
         //if I: Imm
         //if J: just address (no R1&R2)
-        char* parts[10];
+        char* parts[10] = {NULL};
         int count = 0;
-        char* token = strtok(line, " "); // the equivalent of .slice() in python
+        char* token = strtok(line, " \r\n\t"); // Safely strip spaces, tabs, and line-breaks
         while(token != NULL) {
           parts[count++] = token;
-          token = strtok(NULL, " ");
+          token = strtok(NULL, " \r\n\t");
         }
+
+        if (count == 0) continue; // Skip blank lines
 
         char* opcode_str = parts[0]; //opcode
         // To avoid hardcoding the array size, you can calculate it like this:
         if(arrayContainsElement(r_instructions, sizeof(r_instructions)/sizeof(r_instructions[0]), opcode_str)) {
           int reg1 = regNameToNumber(parts[1]);
           int reg2 = regNameToNumber(parts[2]); 
-          int reg3 = regNameToNumber(parts[3]); 
-          int shamt = atoi(parts[4]); 
+          int reg3 = 0, shamt = 0;
+          if (strcmp(opcode_str, "LSL") == 0 || strcmp(opcode_str, "LSR") == 0) {
+              shamt = atoi(parts[3] ? parts[3] : "0");
+          } else {
+              reg3 = regNameToNumber(parts[3] ? parts[3] : "R0");
+          }
           (mem + index)->data = encodeR(opcodeStringToInt(opcode_str), reg1, reg2, reg3, shamt);
           (mem + index)->isValid = true;
         } 
 
         else if (arrayContainsElement(i_instructions, sizeof(i_instructions)/sizeof(i_instructions[0]), opcode_str)) {
           int reg1 = regNameToNumber(parts[1]);
-          int reg2 = regNameToNumber(parts[2]);
-          int imm = atoi(parts[3]);
+          int reg2 = 0, imm = 0;
+          if (strcmp(opcode_str, "MOVI") == 0) {
+              imm = atoi(parts[2] ? parts[2] : "0");
+          } else {
+              reg2 = regNameToNumber(parts[2] ? parts[2] : "R0");
+              imm = atoi(parts[3] ? parts[3] : "0");
+          }
           (mem + index)->data = encodeI(opcodeStringToInt(opcode_str), reg1, reg2, imm);
           (mem + index)->isValid = true;
         }
@@ -90,6 +101,7 @@ bool arrayContainsElement(char* array[], int arrayLength, char* element){
 }
 
 int regNameToNumber(char* reg) {
+  if (reg == NULL || reg[0] != 'R') return 0; // Prevent crash on missing parameters
   int reg_num = atoi(reg + 1); // should work for multiple digits also like R14 for example
   return reg_num;
 }

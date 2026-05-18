@@ -25,6 +25,7 @@ void MEM_execute(EX_MEM_Buffer *in, MEM_WB_Buffer *out, memory *mem, uint32_t* o
         int address = in->mem_write;
 
         mem[address].data = in->alu_result;
+        mem[address].isValid = true;
         out->data = in->alu_result;
         printf("MEM: STORE - Wrote value %d to address %d\n", in->alu_result, address);
     }

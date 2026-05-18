@@ -3,7 +3,7 @@ import json
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QTableWidget, QTableWidgetItem, QTabWidget,
-    QGroupBox, QSpinBox, QFrame, QScrollArea, QToolButton
+    QGroupBox, QSpinBox, QFrame, QScrollArea, QToolButton, QSizePolicy
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread
 from PyQt5.QtGui import QFont, QColor, QBrush, QIcon
@@ -57,6 +57,40 @@ DARK_STYLESHEET = """
         color: #e0e0e0;
         border: 1px solid #3e3e42;
         gridline-color: #3e3e42;
+    }
+    QTableWidget QScrollBar:vertical,
+    QTableWidget QScrollBar:horizontal {
+        background-color: #1e1e1e;
+        border: none;
+        margin: 0px;
+    }
+    QTableWidget QScrollBar:vertical {
+        width: 10px;
+    }
+    QTableWidget QScrollBar:horizontal {
+        height: 10px;
+    }
+    QTableWidget QScrollBar::handle:vertical,
+    QTableWidget QScrollBar::handle:horizontal {
+        background-color: #4a4a4a;
+        border-radius: 4px;
+        min-height: 20px;
+        min-width: 20px;
+    }
+    QTableWidget QScrollBar::handle:vertical:hover,
+    QTableWidget QScrollBar::handle:horizontal:hover {
+        background-color: #5a5a5a;
+    }
+    QTableWidget QScrollBar::add-line,
+    QTableWidget QScrollBar::sub-line {
+        background: none;
+        border: none;
+        width: 0px;
+        height: 0px;
+    }
+    QTableWidget QScrollBar::add-page,
+    QTableWidget QScrollBar::sub-page {
+        background: none;
     }
     QTableWidget::item {
         padding: 5px;
@@ -122,6 +156,48 @@ DARK_STYLESHEET = """
         background-color: #252526;
         border: 1px solid #3e3e42;
         border-radius: 4px;
+    }
+    QScrollBar:vertical {
+        background-color: #1e1e1e;
+        width: 12px;
+        margin: 0px;
+    }
+    QScrollBar::handle:vertical {
+        background-color: #3a3a3a;
+        min-height: 24px;
+        border-radius: 5px;
+    }
+    QScrollBar::handle:vertical:hover {
+        background-color: #4a4a4a;
+    }
+    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+        background: none;
+        border: none;
+        height: 0px;
+    }
+    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+        background: none;
+    }
+    QScrollBar:horizontal {
+        background-color: #1e1e1e;
+        height: 12px;
+        margin: 0px;
+    }
+    QScrollBar::handle:horizontal {
+        background-color: #3a3a3a;
+        min-width: 24px;
+        border-radius: 5px;
+    }
+    QScrollBar::handle:horizontal:hover {
+        background-color: #4a4a4a;
+    }
+    QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+        background: none;
+        border: none;
+        width: 0px;
+    }
+    QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+        background: none;
     }
 """
 
@@ -420,7 +496,7 @@ class CPUSimulatorGUI(QMainWindow):
         self.log_display.setHorizontalHeaderLabels(["Cycle", "Event"])
         self.log_display.setColumnWidth(0, 60)
         self.log_display.setColumnWidth(1, 800)
-        self.log_display.setMaximumHeight(200)
+        self.log_display.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
         layout.addWidget(self.log_display)
         container.setLayout(layout)

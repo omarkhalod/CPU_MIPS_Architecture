@@ -17,6 +17,7 @@
 #define SIGN_MASK 0x80
 
 int prevAluResult;
+bool prevAluResultValid = false;
 
 static void set_add_flags(EX_MEM_Buffer *out, uint32_t a, uint32_t b)
 {
@@ -61,10 +62,13 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
     {
         printf("EX: *** HAZARD DETECTED on RegA! ***\n");
         printf("EX: Resolving RegA hazard...\n");
-        if (prevAluResult == -1)
+        if (!prevAluResultValid)
         {
             printf("EX: RegA hazard waiting on memory load...\n");
             self->regA_value = *omar_yahia_var_inbtw_mres;
+            prevAluResult = self->regA_value;
+            prevAluResultValid = true;
+            self->regA_updated = false;
             printf("EX: *** HAZARD RESOLVED! *** RegA value updated from memory to %d\n", self->regA_value);
         }
         else
@@ -79,10 +83,13 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
     {
         printf("EX: *** HAZARD DETECTED on RegB! ***\n");
         printf("EX: Resolving RegB hazard...\n");
-        if (prevAluResult == -1)
+        if (!prevAluResultValid)
         {
             printf("EX: RegB hazard waiting on memory load...\n");
             self->regB_value = *omar_yahia_var_inbtw_mres;
+            prevAluResult = self->regB_value;
+            prevAluResultValid = true;
+            self->regB_updated = false;
             printf("EX: *** HAZARD RESOLVED! *** RegB value updated from memory to %d\n", self->regB_value);
         }
         else
@@ -101,6 +108,7 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
     {
     case OP_ADD:
         prevAluResult = out->alu_result = self->regA_value + self->regB_value;
+        prevAluResultValid = true;
         set_add_flags(out, self->regA_value, self->regB_value);
         printf("EX: ADD %d + %d = %d | Carry = %d | Overflow = %d\n",
                self->regA_value, self->regB_value, out->alu_result, out->carry, out->overflow);
@@ -108,6 +116,7 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
 
     case OP_SUB:
         prevAluResult = out->alu_result = self->regA_value - self->regB_value;
+        prevAluResultValid = true;
         set_sub_flags(out, self->regA_value, self->regB_value);
         printf("EX: SUB %d - %d = %d | Carry = %d | Overflow = %d\n",
                self->regA_value, self->regB_value, out->alu_result, out->carry, out->overflow);
@@ -115,6 +124,7 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
 
     case OP_MUL:
         prevAluResult = out->alu_result = self->regA_value * self->regB_value;
+        prevAluResultValid = true;
         {
             uint32_t temp1 = self->regA_value & BYTE_MASK;
             uint32_t temp2 = self->regB_value & BYTE_MASK;
@@ -134,21 +144,25 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
 
     case OP_MOVI:
         prevAluResult = out->alu_result = self->immediate;
+        prevAluResultValid = true;
         printf("EX: MOVI setting result to %d\n", out->alu_result);
         break;
 
     case OP_AND:
         prevAluResult = out->alu_result = self->regA_value & self->regB_value;
+        prevAluResultValid = true;
         printf("EX: AND %d & %d = %d\n", self->regA_value, self->regB_value, out->alu_result);
         break;
 
     case OP_ORI:
         prevAluResult = out->alu_result = self->regA_value | self->immediate;
+        prevAluResultValid = true;
         printf("EX: ORI %d | %d = %d\n", self->regA_value, self->immediate, out->alu_result);
         break;
 
     case OP_LSL:
         prevAluResult = out->alu_result = self->regA_value << self->SHAMT;
+        prevAluResultValid = true;
         out->carry = ((self->regA_value << self->SHAMT) & CARRY_MASK) == CARRY_MASK;
         printf("EX: LSL %d << %d = %d | Carry = %d | Overflow = %d\n",
                self->regA_value, self->SHAMT, out->alu_result, out->carry, out->overflow);
@@ -156,13 +170,14 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
 
     case OP_LSR:
         prevAluResult = out->alu_result = self->regA_value >> self->SHAMT;
+        prevAluResultValid = true;
         printf("EX: LSR %d >> %d = %d\n", self->regA_value, self->SHAMT, out->alu_result);
         break;
 
     case OP_MOVR:
         memAddress = self->regA_value + self->immediate;
         out->mem_read = memAddress;
-        prevAluResult = -1;
+        prevAluResultValid = false;
         printf("EX: MOVR calculated address = %d\n", memAddress);
         break;
 
@@ -170,6 +185,8 @@ void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var
         memAddress = self->regA_value + self->immediate;
         out->mem_write = memAddress;
         out->alu_result = self->regB_value; // Forward value to MEM stage for writing
+        prevAluResult = out->alu_result;
+        prevAluResultValid = true;
         printf("EX: MOVM calculated address = %d, data to write = %d\n", memAddress, out->alu_result);
         break;
 

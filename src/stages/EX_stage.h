@@ -24,4 +24,7 @@ typedef enum
 
 void EX_execute(ID_EX_Buffer *self, EX_MEM_Buffer *out, uint32_t *omar_yahia_var_inbtw_mres, gpr *pc);
 
+extern int prevAluResult;
+extern bool prevAluResultValid;
+
 #endif // EXECUTE_TEMPLATE
